@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Candidates from "./pages/Candidates";
 import JobPositions from "./pages/JobPositions";
 import Recruitment from "./pages/Recruitment";
+import Agents from "./pages/Agents";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,11 @@ const App = () => (
           <Route path="/recruitment" element={
             <Layout>
               <Recruitment />
+            </Layout>
+          } />
+          <Route path="/agents" element={
+            <Layout>
+              <Agents />
             </Layout>
           } />
           <Route path="*" element={<NotFound />} />

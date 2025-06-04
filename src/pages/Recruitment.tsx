@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, Eye, UserCheck, Trash2 } from "lucide-react";
+import { Search, Eye, UserCheck, Trash2, ArrowUpAz, ArrowDownAz } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Recruitment() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProspects, setSelectedProspects] = useState<string[]>([]);
+  const [sortField, setSortField] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const queryClient = useQueryClient();
 
   const { data: applications, isLoading: applicationsLoading } = useQuery({
@@ -72,10 +74,48 @@ export default function Recruitment() {
     app.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredProspects = prospects?.filter(prospect =>
-    prospect.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prospect.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return null;
+    return sortDirection === "asc" ? <ArrowUpAz className="h-4 w-4" /> : <ArrowDownAz className="h-4 w-4" />;
+  };
+
+  const filteredAndSortedProspects = prospects
+    ?.filter(prospect =>
+      prospect.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.agent?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    ?.sort((a, b) => {
+      const getValue = (obj: any, field: string) => {
+        switch (field) {
+          case "name": return obj.name || "";
+          case "agent": return obj.agent?.name || "";
+          case "email": return obj.email || "";
+          case "phone": return obj.phone || "";
+          case "created_at": return obj.created_at || "";
+          case "linkedin_url": return obj.linkedin_url || "";
+          default: return "";
+        }
+      };
+      
+      const aVal = getValue(a, sortField);
+      const bVal = getValue(b, sortField);
+      
+      if (sortDirection === "asc") {
+        return aVal.localeCompare(bVal);
+      } else {
+        return bVal.localeCompare(aVal);
+      }
+    });
 
   const deleteProspectsMutation = useMutation({
     mutationFn: async (prospectIds: string[]) => {
@@ -105,7 +145,7 @@ export default function Recruitment() {
 
   const handleSelectAllProspects = (checked: boolean) => {
     if (checked) {
-      setSelectedProspects(filteredProspects?.map(p => p.id) || []);
+      setSelectedProspects(filteredAndSortedProspects?.map(p => p.id) || []);
     } else {
       setSelectedProspects([]);
     }
@@ -232,21 +272,63 @@ export default function Recruitment() {
                   <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedProspects.length === filteredProspects?.length && filteredProspects.length > 0}
+                        checked={selectedProspects.length === filteredAndSortedProspects?.length && filteredAndSortedProspects.length > 0}
                         onCheckedChange={handleSelectAllProspects}
                       />
                     </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Agent</TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("name")}
+                        className="font-medium"
+                      >
+                        Name {getSortIcon("name")}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("agent")}
+                        className="font-medium"
+                      >
+                        Agent {getSortIcon("agent")}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("email")}
+                        className="font-medium"
+                      >
+                        Email {getSortIcon("email")}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("phone")}
+                        className="font-medium"
+                      >
+                        Phone {getSortIcon("phone")}
+                      </Button>
+                    </TableHead>
+                    <TableHead>LinkedIn</TableHead>
                     <TableHead>Evaluations</TableHead>
                     <TableHead>Best Score</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Added Date</TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("created_at")}
+                        className="font-medium"
+                      >
+                        Added Date {getSortIcon("created_at")}
+                      </Button>
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {filteredProspects?.map((prospect) => {
+                 <TableBody>
+                  {filteredAndSortedProspects?.map((prospect) => {
                     const evaluations = prospect.prospect_evaluation || [];
                     const bestScore = evaluations.length > 0 
                       ? Math.max(...evaluations.map(e => e.llm_score || 0))
@@ -264,6 +346,24 @@ export default function Recruitment() {
                           {prospect.name}
                         </TableCell>
                         <TableCell>{prospect.agent?.name}</TableCell>
+                        <TableCell className="text-sm">
+                          {prospect.email}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {prospect.phone}
+                        </TableCell>
+                        <TableCell>
+                          {prospect.linkedin_url && (
+                            <a 
+                              href={prospect.linkedin_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm"
+                            >
+                              LinkedIn
+                            </a>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline">
                             {evaluations.length} evaluations
@@ -275,14 +375,6 @@ export default function Recruitment() {
                               {(bestScore * 100).toFixed(0)}%
                             </Badge>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="text-sm">{prospect.email}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {prospect.phone}
-                            </div>
-                          </div>
                         </TableCell>
                         <TableCell>
                           {new Date(prospect.created_at).toLocaleDateString()}
