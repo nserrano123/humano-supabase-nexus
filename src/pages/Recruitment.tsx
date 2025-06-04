@@ -547,6 +547,8 @@ export default function Recruitment() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
         <TabsContent value="workflow" className="space-y-4">
           <WorkflowView />
         </TabsContent>
