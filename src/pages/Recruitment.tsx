@@ -8,14 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, Eye, UserCheck, Trash2, ArrowUpAz, ArrowDownAz } from "lucide-react";
+import { Search, Eye, UserCheck, Trash2, ArrowUpAz, ArrowDownAz, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { EvaluationModal } from "@/components/EvaluationModal";
+import { ProspectProfileModal } from "@/components/ProspectProfileModal";
+import { WorkflowView } from "@/components/WorkflowView";
 
 export default function Recruitment() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProspects, setSelectedProspects] = useState<string[]>([]);
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [selectedProspectForEvaluation, setSelectedProspectForEvaluation] = useState<any>(null);
+  const [selectedProspectForProfile, setSelectedProspectForProfile] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: applications, isLoading: applicationsLoading } = useQuery({
@@ -42,8 +47,10 @@ export default function Recruitment() {
           *,
           agent:agent_id(name),
           prospect_evaluation(
+            id,
             llm_score,
             llm_evaluation,
+            created_at,
             job_position:job_position_id(name)
           )
         `)
@@ -92,6 +99,8 @@ export default function Recruitment() {
     ?.filter(prospect =>
       prospect.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prospect.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.profile_text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prospect.agent?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     ?.sort((a, b) => {
@@ -103,6 +112,11 @@ export default function Recruitment() {
           case "phone": return obj.phone || "";
           case "created_at": return obj.created_at || "";
           case "linkedin_url": return obj.linkedin_url || "";
+          case "evaluations": return obj.prospect_evaluation?.length || 0;
+          case "best_score": 
+            return obj.prospect_evaluation?.length > 0 
+              ? Math.max(...obj.prospect_evaluation.map((e: any) => e.llm_score || 0))
+              : 0;
           default: return "";
         }
       };
@@ -110,10 +124,14 @@ export default function Recruitment() {
       const aVal = getValue(a, sortField);
       const bVal = getValue(b, sortField);
       
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
+      }
+      
       if (sortDirection === "asc") {
-        return aVal.localeCompare(bVal);
+        return aVal.toString().localeCompare(bVal.toString());
       } else {
-        return bVal.localeCompare(aVal);
+        return bVal.toString().localeCompare(aVal.toString());
       }
     });
 
@@ -157,6 +175,25 @@ export default function Recruitment() {
     }
   };
 
+  const getBestScore = (evaluations: any[]) => {
+    if (!evaluations || evaluations.length === 0) return 0;
+    return Math.max(...evaluations.map((e: any) => e.llm_score || 0));
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return "bg-green-200 text-green-800";
+    if (score >= 45) return "bg-yellow-200 text-yellow-800";
+    return "bg-red-200 text-red-800";
+  };
+
+  const handleEvaluationClick = (prospect: any, evaluations: any[]) => {
+    setSelectedProspectForEvaluation({ ...prospect, evaluations });
+  };
+
+  const handleViewProfile = (prospect: any) => {
+    setSelectedProspectForProfile(prospect);
+  };
+
   if (applicationsLoading || prospectsLoading || processesLoading) {
     return <div>Loading recruitment data...</div>;
   }
@@ -173,6 +210,7 @@ export default function Recruitment() {
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="prospects">Prospects</TabsTrigger>
           <TabsTrigger value="processes">Active Processes</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
         </TabsList>
 
         <TabsContent value="applications" className="space-y-4">
@@ -312,9 +350,34 @@ export default function Recruitment() {
                         Phone {getSortIcon("phone")}
                       </Button>
                     </TableHead>
-                    <TableHead>LinkedIn</TableHead>
-                    <TableHead>Evaluations</TableHead>
-                    <TableHead>Best Score</TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("linkedin_url")}
+                        className="font-medium"
+                      >
+                        LinkedIn {getSortIcon("linkedin_url")}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="min-w-[200px]">Profile Text</TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("evaluations")}
+                        className="font-medium"
+                      >
+                        Evaluations {getSortIcon("evaluations")}
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSort("best_score")}
+                        className="font-medium"
+                      >
+                        Best Score {getSortIcon("best_score")}
+                      </Button>
+                    </TableHead>
                     <TableHead>
                       <Button 
                         variant="ghost" 
@@ -330,58 +393,85 @@ export default function Recruitment() {
                  <TableBody>
                   {filteredAndSortedProspects?.map((prospect) => {
                     const evaluations = prospect.prospect_evaluation || [];
-                    const bestScore = evaluations.length > 0 
-                      ? Math.max(...evaluations.map(e => e.llm_score || 0))
-                      : 0;
+                    const bestScore = getBestScore(evaluations);
                     
                     return (
-                      <TableRow key={prospect.id}>
+                      <TableRow key={prospect.id} className="hover:bg-gray-50">
                         <TableCell>
                           <Checkbox
                             checked={selectedProspects.includes(prospect.id)}
                             onCheckedChange={(checked) => handleSelectProspect(prospect.id, checked as boolean)}
                           />
                         </TableCell>
-                        <TableCell className="font-medium">
-                          {prospect.name}
-                        </TableCell>
-                        <TableCell>{prospect.agent?.name}</TableCell>
-                        <TableCell className="text-sm">
-                          {prospect.email}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {prospect.phone}
+                        <TableCell className="font-medium min-w-[150px]">
+                          <div className="truncate" title={prospect.name}>
+                            {prospect.name || 'N/A'}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          {prospect.linkedin_url && (
+                          <div className="truncate" title={prospect.agent?.name}>
+                            {prospect.agent?.name || 'N/A'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <div className="truncate" title={prospect.email}>
+                            {prospect.email || 'N/A'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <div className="truncate" title={prospect.phone}>
+                            {prospect.phone || 'N/A'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {prospect.linkedin_url ? (
                             <a 
                               href={prospect.linkedin_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm"
+                              className="text-blue-600 hover:underline inline-flex items-center gap-1 text-sm"
                             >
-                              LinkedIn
+                              LinkedIn <ExternalLink className="h-3 w-3" />
                             </a>
-                          )}
+                          ) : 'N/A'}
+                        </TableCell>
+                        <TableCell className="min-w-[200px]">
+                          <div 
+                            className="truncate cursor-help text-sm" 
+                            title={prospect.profile_text}
+                            style={{ maxWidth: '200px' }}
+                          >
+                            {prospect.profile_text || 'No profile text'}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={() => handleEvaluationClick(prospect, evaluations)}
+                            className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800"
+                          >
                             {evaluations.length} evaluations
-                          </Badge>
+                          </Button>
                         </TableCell>
                         <TableCell>
-                          {bestScore > 0 && (
-                            <Badge variant={bestScore >= 0.7 ? "default" : "secondary"}>
-                              {(bestScore * 100).toFixed(0)}%
-                            </Badge>
-                          )}
+                          <Badge 
+                            className={`${getScoreColor(bestScore)} border-0`}
+                          >
+                            {bestScore > 0 ? `${bestScore.toFixed(1)}%` : 'N/A'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           {new Date(prospect.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewProfile(prospect)}
+                              title="Ver perfil completo"
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </div>
@@ -457,8 +547,24 @@ export default function Recruitment() {
               </Table>
             </CardContent>
           </Card>
+        <TabsContent value="workflow" className="space-y-4">
+          <WorkflowView />
         </TabsContent>
       </Tabs>
+
+      {/* Modales */}
+      <EvaluationModal
+        isOpen={!!selectedProspectForEvaluation}
+        onClose={() => setSelectedProspectForEvaluation(null)}
+        evaluations={selectedProspectForEvaluation?.evaluations || []}
+        prospectName={selectedProspectForEvaluation?.name || ''}
+      />
+
+      <ProspectProfileModal
+        isOpen={!!selectedProspectForProfile}
+        onClose={() => setSelectedProspectForProfile(null)}
+        prospect={selectedProspectForProfile}
+      />
     </div>
   );
 }
