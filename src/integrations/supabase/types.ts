@@ -1145,13 +1145,13 @@ export type Database = {
       insert_prospect_with_agent_and_job_position: {
         Args: {
           agent_id: string
-          job_position_id: string
           linkedin_url: string
           name: string
           phone: string
           email: string
+          job_position_id: string
         }
-        Returns: undefined
+        Returns: Json
       }
       ivfflat_bit_support: {
         Args: { "": unknown }

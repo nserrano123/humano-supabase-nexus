@@ -1,15 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, ExternalLink } from "lucide-react";
+import { Search, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Candidates() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
   const { data: candidates, isLoading } = useQuery({
     queryKey: ["candidates"],
@@ -38,6 +42,46 @@ export default function Candidates() {
     candidate.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const deleteCandidatesMutation = useMutation({
+    mutationFn: async (candidateIds: string[]) => {
+      const { error } = await supabase
+        .from("candidate")
+        .delete()
+        .in("id", candidateIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["candidates"] });
+      setSelectedCandidates([]);
+      toast.success("Candidatos eliminados correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al eliminar candidatos: " + error.message);
+    },
+  });
+
+  const handleSelectCandidate = (candidateId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCandidates([...selectedCandidates, candidateId]);
+    } else {
+      setSelectedCandidates(selectedCandidates.filter(id => id !== candidateId));
+    }
+  };
+
+  const handleSelectAllCandidates = (checked: boolean) => {
+    if (checked) {
+      setSelectedCandidates(filteredCandidates?.map(c => c.id) || []);
+    } else {
+      setSelectedCandidates([]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedCandidates.length > 0) {
+      deleteCandidatesMutation.mutate(selectedCandidates);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading candidates...</div>;
   }
@@ -53,7 +97,7 @@ export default function Candidates() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between space-x-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -63,12 +107,28 @@ export default function Candidates() {
                 className="pl-10"
               />
             </div>
+            {selectedCandidates.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSelected}
+                disabled={deleteCandidatesMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar ({selectedCandidates.length})
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedCandidates.length === filteredCandidates?.length && filteredCandidates.length > 0}
+                    onCheckedChange={handleSelectAllCandidates}
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Location</TableHead>
@@ -85,6 +145,12 @@ export default function Candidates() {
                 
                 return (
                   <TableRow key={candidate.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedCandidates.includes(candidate.id)}
+                        onCheckedChange={(checked) => handleSelectCandidate(candidate.id, checked as boolean)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{candidate.name}</TableCell>
                     <TableCell>{candidate.email}</TableCell>
                     <TableCell>{candidate.city?.name}</TableCell>

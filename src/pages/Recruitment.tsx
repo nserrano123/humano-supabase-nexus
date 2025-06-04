@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,11 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, Eye, UserCheck } from "lucide-react";
+import { Search, Eye, UserCheck, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Recruitment() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProspects, setSelectedProspects] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
   const { data: applications, isLoading: applicationsLoading } = useQuery({
     queryKey: ["job-applications"],
@@ -72,6 +76,46 @@ export default function Recruitment() {
     prospect.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prospect.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const deleteProspectsMutation = useMutation({
+    mutationFn: async (prospectIds: string[]) => {
+      const { error } = await supabase
+        .from("prospect")
+        .delete()
+        .in("id", prospectIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["prospects"] });
+      setSelectedProspects([]);
+      toast.success("Prospects eliminados correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al eliminar prospects: " + error.message);
+    },
+  });
+
+  const handleSelectProspect = (prospectId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedProspects([...selectedProspects, prospectId]);
+    } else {
+      setSelectedProspects(selectedProspects.filter(id => id !== prospectId));
+    }
+  };
+
+  const handleSelectAllProspects = (checked: boolean) => {
+    if (checked) {
+      setSelectedProspects(filteredProspects?.map(p => p.id) || []);
+    } else {
+      setSelectedProspects([]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedProspects.length > 0) {
+      deleteProspectsMutation.mutate(selectedProspects);
+    }
+  };
 
   if (applicationsLoading || prospectsLoading || processesLoading) {
     return <div>Loading recruitment data...</div>;
@@ -160,7 +204,7 @@ export default function Recruitment() {
           <Card>
             <CardHeader>
               <CardTitle>Prospects</CardTitle>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-between space-x-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -170,12 +214,28 @@ export default function Recruitment() {
                     className="pl-10"
                   />
                 </div>
+                {selectedProspects.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteSelected}
+                    disabled={deleteProspectsMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar ({selectedProspects.length})
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedProspects.length === filteredProspects?.length && filteredProspects.length > 0}
+                        onCheckedChange={handleSelectAllProspects}
+                      />
+                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Agent</TableHead>
                     <TableHead>Evaluations</TableHead>
@@ -194,6 +254,12 @@ export default function Recruitment() {
                     
                     return (
                       <TableRow key={prospect.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedProspects.includes(prospect.id)}
+                            onCheckedChange={(checked) => handleSelectProspect(prospect.id, checked as boolean)}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           {prospect.name}
                         </TableCell>

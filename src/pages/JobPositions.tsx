@@ -1,15 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, Plus, Edit } from "lucide-react";
+import { Search, Plus, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function JobPositions() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
   const { data: jobPositions, isLoading } = useQuery({
     queryKey: ["job-positions"],
@@ -47,6 +51,46 @@ export default function JobPositions() {
     job.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const deletePositionsMutation = useMutation({
+    mutationFn: async (positionIds: string[]) => {
+      const { error } = await supabase
+        .from("job_position")
+        .delete()
+        .in("id", positionIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-positions"] });
+      setSelectedPositions([]);
+      toast.success("Posiciones eliminadas correctamente");
+    },
+    onError: (error) => {
+      toast.error("Error al eliminar posiciones: " + error.message);
+    },
+  });
+
+  const handleSelectPosition = (positionId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedPositions([...selectedPositions, positionId]);
+    } else {
+      setSelectedPositions(selectedPositions.filter(id => id !== positionId));
+    }
+  };
+
+  const handleSelectAllPositions = (checked: boolean) => {
+    if (checked) {
+      setSelectedPositions(filteredJobPositions?.map(p => p.id) || []);
+    } else {
+      setSelectedPositions([]);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedPositions.length > 0) {
+      deletePositionsMutation.mutate(selectedPositions);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading job positions...</div>;
   }
@@ -66,7 +110,7 @@ export default function JobPositions() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between space-x-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -76,12 +120,28 @@ export default function JobPositions() {
                 className="pl-10"
               />
             </div>
+            {selectedPositions.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSelected}
+                disabled={deletePositionsMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar ({selectedPositions.length})
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedPositions.length === filteredJobPositions?.length && filteredJobPositions.length > 0}
+                    onCheckedChange={handleSelectAllPositions}
+                  />
+                </TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Work Mode</TableHead>
@@ -95,6 +155,12 @@ export default function JobPositions() {
             <TableBody>
               {filteredJobPositions?.map((job) => (
                 <TableRow key={job.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedPositions.includes(job.id)}
+                      onCheckedChange={(checked) => handleSelectPosition(job.id, checked as boolean)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">{job.name}</div>
