@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Candidates from "./pages/Candidates";
 import JobPositions from "./pages/JobPositions";
 import Recruitment from "./pages/Recruitment";
+import RecruitmentDetails from "./pages/RecruitmentDetails";
 import Agents from "./pages/Agents";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,11 @@ const App = () => (
           <Route path="/agents" element={
             <Layout>
               <Agents />
+            </Layout>
+          } />
+          <Route path="/recruitment-details/:jobPositionId" element={
+            <Layout>
+              <RecruitmentDetails />
             </Layout>
           } />
           <Route path="*" element={<NotFound />} />

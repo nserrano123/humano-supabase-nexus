@@ -46,6 +46,7 @@ export type Database = {
           email: string | null
           embedding: string | null
           github: string | null
+          hiring_stage: string | null
           id: string
           linkedin_url: string | null
           metadata: Json | null
@@ -65,6 +66,7 @@ export type Database = {
           email?: string | null
           embedding?: string | null
           github?: string | null
+          hiring_stage?: string | null
           id?: string
           linkedin_url?: string | null
           metadata?: Json | null
@@ -84,6 +86,7 @@ export type Database = {
           email?: string | null
           embedding?: string | null
           github?: string | null
+          hiring_stage?: string | null
           id?: string
           linkedin_url?: string | null
           metadata?: Json | null
@@ -658,12 +661,16 @@ export type Database = {
           created_at: string
           department: string | null
           description: string
+          end_date: string | null
           evaluation_criteria: string
           id: string
           is_open: boolean
           llm_score_threshold: number
           long_description: string | null
           name: string
+          open_positions: number | null
+          positions_hired: number | null
+          start_date: string | null
           work_mode: string | null
         }
         Insert: {
@@ -671,12 +678,16 @@ export type Database = {
           created_at?: string
           department?: string | null
           description?: string
+          end_date?: string | null
           evaluation_criteria: string
           id?: string
           is_open?: boolean
           llm_score_threshold?: number
           long_description?: string | null
           name: string
+          open_positions?: number | null
+          positions_hired?: number | null
+          start_date?: string | null
           work_mode?: string | null
         }
         Update: {
@@ -684,12 +695,16 @@ export type Database = {
           created_at?: string
           department?: string | null
           description?: string
+          end_date?: string | null
           evaluation_criteria?: string
           id?: string
           is_open?: boolean
           llm_score_threshold?: number
           long_description?: string | null
           name?: string
+          open_positions?: number | null
+          positions_hired?: number | null
+          start_date?: string | null
           work_mode?: string | null
         }
         Relationships: []
@@ -787,6 +802,7 @@ export type Database = {
           agent_id: string
           created_at: string
           email: string | null
+          estado: string | null
           id: string
           linkedin_url: string | null
           name: string | null
@@ -798,6 +814,7 @@ export type Database = {
           agent_id: string
           created_at?: string
           email?: string | null
+          estado?: string | null
           id?: string
           linkedin_url?: string | null
           name?: string | null
@@ -809,6 +826,7 @@ export type Database = {
           agent_id?: string
           created_at?: string
           email?: string | null
+          estado?: string | null
           id?: string
           linkedin_url?: string | null
           name?: string | null
