@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, ExternalLink, Trash2 } from "lucide-react";
+import { Search, ExternalLink, Trash2, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function Candidates() {
@@ -185,6 +186,11 @@ export default function Candidates() {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
+                        <Link to={`/candidates/${candidate.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
                         {candidate.linkedin_url && (
                           <Button
                             variant="outline"

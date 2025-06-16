@@ -46,7 +46,6 @@ export type Database = {
           email: string | null
           embedding: string | null
           github: string | null
-          hiring_stage: string | null
           id: string
           linkedin_url: string | null
           metadata: Json | null
@@ -66,7 +65,6 @@ export type Database = {
           email?: string | null
           embedding?: string | null
           github?: string | null
-          hiring_stage?: string | null
           id?: string
           linkedin_url?: string | null
           metadata?: Json | null
@@ -86,7 +84,6 @@ export type Database = {
           email?: string | null
           embedding?: string | null
           github?: string | null
-          hiring_stage?: string | null
           id?: string
           linkedin_url?: string | null
           metadata?: Json | null
@@ -239,34 +236,34 @@ export type Database = {
           candidate_id: string
           end_date: string | null
           evaluation_id: string | null
+          hiring_stage: string | null
           id: string
           job_position_id: string
           last_score: number | null
           similarity_explanation: string | null
           start_date: string
-          status: string | null
         }
         Insert: {
           candidate_id: string
           end_date?: string | null
           evaluation_id?: string | null
+          hiring_stage?: string | null
           id?: string
           job_position_id: string
           last_score?: number | null
           similarity_explanation?: string | null
           start_date?: string
-          status?: string | null
         }
         Update: {
           candidate_id?: string
           end_date?: string | null
           evaluation_id?: string | null
+          hiring_stage?: string | null
           id?: string
           job_position_id?: string
           last_score?: number | null
           similarity_explanation?: string | null
           start_date?: string
-          status?: string | null
         }
         Relationships: [
           {
@@ -465,6 +462,38 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      evento: {
+        Row: {
+          candidate_id: string | null
+          created_at: string
+          id: number
+          note: string | null
+          type: string | null
+        }
+        Insert: {
+          candidate_id?: string | null
+          created_at?: string
+          id?: number
+          note?: string | null
+          type?: string | null
+        }
+        Update: {
+          candidate_id?: string | null
+          created_at?: string
+          id?: number
+          note?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_evento_candidate"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       experience: {
         Row: {
@@ -802,7 +831,6 @@ export type Database = {
           agent_id: string
           created_at: string
           email: string | null
-          estado: string | null
           id: string
           linkedin_url: string | null
           name: string | null
@@ -814,7 +842,6 @@ export type Database = {
           agent_id: string
           created_at?: string
           email?: string | null
-          estado?: string | null
           id?: string
           linkedin_url?: string | null
           name?: string | null
@@ -826,7 +853,6 @@ export type Database = {
           agent_id?: string
           created_at?: string
           email?: string | null
-          estado?: string | null
           id?: string
           linkedin_url?: string | null
           name?: string | null
@@ -1079,6 +1105,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      associate_candidate_to_job: {
+        Args: { p_candidate_id: string; p_job_position_id: string }
+        Returns: undefined
+      }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
@@ -1091,6 +1121,52 @@ export type Database = {
           job_position_id: string
           similarity: number
         }[]
+      }
+      check_candidate_exists: {
+        Args: { p_linkedin_url: string }
+        Returns: boolean
+      }
+      create_candidate: {
+        Args:
+          | {
+              p_name: string
+              p_linkedin_url: string
+              p_city_id: string
+              p_phone: string
+              p_email: string
+              p_metadata: Json
+            }
+          | {
+              p_name: string
+              p_linkedin_url: string
+              p_phone: string
+              p_email: string
+            }
+        Returns: string
+      }
+      extract_prospect_data: {
+        Args: { p_prospect_id: string }
+        Returns: Record<string, unknown>
+      }
+      find_or_create_city: {
+        Args: { p_city_name: string }
+        Returns: string
+      }
+      find_or_create_company: {
+        Args: { p_company_name: string }
+        Returns: string
+      }
+      find_or_create_language: {
+        Args: { p_language_name: string }
+        Returns: string
+      }
+      find_or_create_program: {
+        Args: { p_program_name: string; p_school: string }
+        Returns: string
+      }
+      get_candidate_id: {
+        Args: { p_linkedin_url: string }
+        Returns: string
       }
       get_job_evaluation_data: {
         Args: { prospect_evaluation_id: string }
@@ -1160,6 +1236,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      insert_candidate_from_prospect_fn: {
+        Args: { p_prospect_id: string }
+        Returns: string
+      }
       insert_prospect_with_agent_and_job_position: {
         Args: {
           agent_id: string
@@ -1191,6 +1271,16 @@ export type Database = {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: string
       }
+      manage_candidate: {
+        Args: {
+          p_name: string
+          p_linkedin_url: string
+          p_phone: string
+          p_email: string
+          p_job_position_id: string
+        }
+        Returns: Json
+      }
       match_documents: {
         Args: { match_count: number; query_embedding: string; filter?: Json }
         Returns: {
@@ -1198,6 +1288,18 @@ export type Database = {
           content: string
           similarity: number
         }[]
+      }
+      process_education: {
+        Args: { p_candidate_id: string; p_education: Json }
+        Returns: undefined
+      }
+      process_experience: {
+        Args: { p_candidate_id: string; p_experience: Json }
+        Returns: undefined
+      }
+      process_languages: {
+        Args: { p_candidate_id: string; p_languages: Json }
+        Returns: undefined
       }
       search_city_by_embedding: {
         Args: {

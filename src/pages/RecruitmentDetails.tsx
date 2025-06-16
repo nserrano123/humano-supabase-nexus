@@ -37,7 +37,6 @@ export default function RecruitmentDetails() {
             name,
             email,
             work_mode,
-            hiring_stage,
             created_at
           )
         `)
@@ -178,10 +177,10 @@ export default function RecruitmentDetails() {
                         </div>
                       </div>
                       
-                      <div className="flex flex-col gap-2 items-end">
-                        <Badge className={getStageColor(candidate.hiring_stage || "")}>
-                          {candidate.hiring_stage || "Sin etapa"}
-                        </Badge>
+                        <div className="flex flex-col gap-2 items-end">
+                          <Badge className={getStageColor(candidateProcess.hiring_stage || "")}>
+                            {candidateProcess.hiring_stage || "Sin etapa"}
+                          </Badge>
                         
                         {candidate.work_mode && (
                           <Badge 
