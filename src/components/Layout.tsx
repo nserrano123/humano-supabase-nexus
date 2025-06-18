@@ -17,6 +17,7 @@ const navigation = [
   { name: "Candidates", href: "/candidates", icon: Users },
   { name: "Job Positions", href: "/jobs", icon: Briefcase },
   { name: "Recruitment", href: "/recruitment", icon: ClipboardList },
+  { name: "Prospects", href: "/prospects", icon: Users },
   { name: "Agents", href: "/agents", icon: Users },
 ];
 

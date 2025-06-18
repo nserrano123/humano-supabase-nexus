@@ -522,8 +522,8 @@ export default function Recruitment() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={process.status === "active" ? "default" : "secondary"}>
-                          {process.status || "In Progress"}
+                        <Badge variant={process.hiring_stage ? "default" : "secondary"}>
+                          {process.hiring_stage || "In Progress"}
                         </Badge>
                       </TableCell>
                       <TableCell>

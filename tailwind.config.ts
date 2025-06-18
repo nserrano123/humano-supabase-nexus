@@ -19,6 +19,13 @@ export default {
 		},
 		extend: {
 			colors: {
+				// Fail Fast Brand Colors
+				'ff-primary': '#1E3A8A',
+				'ff-accent': '#F59E0B',
+				'ff-neutral': '#F3F4F6',
+				'ff-success': '#10B981',
+				'ff-error': '#EF4444',
+				// Original colors
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

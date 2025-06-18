@@ -10,6 +10,7 @@ import JobPositions from "./pages/JobPositions";
 import Recruitment from "./pages/Recruitment";
 import RecruitmentDetails from "./pages/RecruitmentDetails";
 import Agents from "./pages/Agents";
+import Prospects from "./pages/Prospects";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,11 @@ const App = () => (
           <Route path="/agents" element={
             <Layout>
               <Agents />
+            </Layout>
+          } />
+          <Route path="/prospects" element={
+            <Layout>
+              <Prospects />
             </Layout>
           } />
           <Route path="/recruitment-details/:jobPositionId" element={

@@ -41,11 +41,13 @@ export type Database = {
           applied: boolean | null
           city_id: string | null
           created_at: string | null
+          cv_file_path: string | null
           document_number: string | null
           document_type: string | null
           email: string | null
           embedding: string | null
           github: string | null
+          hiring_stage: string | null
           id: string
           linkedin_url: string | null
           metadata: Json | null
@@ -60,11 +62,13 @@ export type Database = {
           applied?: boolean | null
           city_id?: string | null
           created_at?: string | null
+          cv_file_path?: string | null
           document_number?: string | null
           document_type?: string | null
           email?: string | null
           embedding?: string | null
           github?: string | null
+          hiring_stage?: string | null
           id?: string
           linkedin_url?: string | null
           metadata?: Json | null
@@ -79,11 +83,13 @@ export type Database = {
           applied?: boolean | null
           city_id?: string | null
           created_at?: string | null
+          cv_file_path?: string | null
           document_number?: string | null
           document_type?: string | null
           email?: string | null
           embedding?: string | null
           github?: string | null
+          hiring_stage?: string | null
           id?: string
           linkedin_url?: string | null
           metadata?: Json | null
