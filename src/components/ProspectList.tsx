@@ -30,9 +30,6 @@ const ProspectList: React.FC = () => {
 
   const fetchProspects = async () => {
     try {
-      // Primero actualizar campos desde JSON
-      await supabase.rpc('update_prospect_fields_from_json');
-      
       const { data, error } = await supabase
         .from('prospect')
         .select('id, name, email, phone, linkedin_url, profile_text, profile_json, created_at')
@@ -52,8 +49,8 @@ const ProspectList: React.FC = () => {
     setConvertingIds(prev => new Set(prev).add(prospectId));
 
     try {
-      const { error } = await supabase.rpc('insert_candidate_from_prospect', {
-        prospect_id: prospectId
+      const { error } = await supabase.rpc('insert_candidate_from_prospect_fn', {
+        p_prospect_id: prospectId
       });
 
       if (error) throw error;
