@@ -13,6 +13,8 @@ interface Prospect {
   email: string;
   phone: string;
   linkedin_url: string;
+  profile_text: string;
+  profile_json: any;
   created_at: string;
 }
 
@@ -28,9 +30,12 @@ const ProspectList: React.FC = () => {
 
   const fetchProspects = async () => {
     try {
+      // Primero actualizar campos desde JSON
+      await supabase.rpc('update_prospect_fields_from_json');
+      
       const { data, error } = await supabase
         .from('prospect')
-        .select('id, name, email, phone, linkedin_url, created_at')
+        .select('id, name, email, phone, linkedin_url, profile_text, profile_json, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -47,7 +52,7 @@ const ProspectList: React.FC = () => {
     setConvertingIds(prev => new Set(prev).add(prospectId));
 
     try {
-      const { error } = await supabase.rpc('insert_candidate_from_prospect_fn' as any, {
+      const { error } = await supabase.rpc('insert_candidate_from_prospect', {
         prospect_id: prospectId
       });
 
@@ -74,7 +79,7 @@ const ProspectList: React.FC = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E3A8A] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ff-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Cargando prospectos...</p>
         </div>
       </div>
@@ -84,9 +89,9 @@ const ProspectList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Users className="h-8 w-8 text-[#1E3A8A]" />
+        <Users className="h-8 w-8 text-ff-primary" />
         <div>
-          <h1 className="text-3xl font-bold text-[#1E3A8A]">Lista de Prospectos</h1>
+          <h1 className="text-3xl font-bold text-ff-primary">Lista de Prospectos</h1>
           <p className="text-muted-foreground">
             Gestiona y convierte prospectos en candidatos
           </p>
@@ -95,7 +100,7 @@ const ProspectList: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-[#1E3A8A]">
+          <CardTitle className="text-ff-primary">
             Prospectos Disponibles ({prospects.length})
           </CardTitle>
         </CardHeader>
@@ -114,11 +119,13 @@ const ProspectList: React.FC = () => {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-[#1E3A8A]">
+                  <TableRow className="bg-ff-primary">
                     <TableHead className="text-white font-semibold">Nombre</TableHead>
                     <TableHead className="text-white font-semibold">Email</TableHead>
                     <TableHead className="text-white font-semibold">Teléfono</TableHead>
                     <TableHead className="text-white font-semibold">LinkedIn</TableHead>
+                    <TableHead className="text-white font-semibold">Título</TableHead>
+                    <TableHead className="text-white font-semibold">Ubicación</TableHead>
                     <TableHead className="text-white font-semibold">Fecha</TableHead>
                     <TableHead className="text-white font-semibold text-center">Acciones</TableHead>
                   </TableRow>
@@ -127,16 +134,16 @@ const ProspectList: React.FC = () => {
                   {prospects.map((prospect) => (
                     <TableRow 
                       key={prospect.id}
-                      className="hover:bg-[#F3F4F6] transition-colors"
+                      className="hover:bg-ff-neutral transition-colors"
                     >
                       <TableCell className="font-medium">
-                        {prospect.name || 'Sin nombre'}
+                        {prospect.name || prospect.profile_json?.name || 'Sin nombre'}
                       </TableCell>
                       <TableCell>
-                        {prospect.email || 'Sin email'}
+                        {prospect.email || prospect.profile_json?.email || 'Sin email'}
                       </TableCell>
                       <TableCell>
-                        {prospect.phone || 'Sin teléfono'}
+                        {prospect.phone || prospect.profile_json?.phone || 'Sin teléfono'}
                       </TableCell>
                       <TableCell>
                         {prospect.linkedin_url ? (
@@ -144,7 +151,7 @@ const ProspectList: React.FC = () => {
                             href={prospect.linkedin_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[#F59E0B] hover:underline inline-flex items-center gap-1"
+                            className="text-ff-accent hover:underline inline-flex items-center gap-1"
                           >
                             Ver perfil
                             <ExternalLink className="h-3 w-3" />
@@ -153,13 +160,19 @@ const ProspectList: React.FC = () => {
                           <span className="text-muted-foreground">Sin LinkedIn</span>
                         )}
                       </TableCell>
+                      <TableCell className="text-sm">
+                        {prospect.profile_json?.title || 'Sin título'}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {prospect.profile_json?.location || 'Sin ubicación'}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(prospect.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex justify-center">
                           {isConverted(prospect.id) ? (
-                            <Badge className="bg-[#10B981] text-white">
+                            <Badge className="bg-ff-success text-white">
                               Convertido
                             </Badge>
                           ) : (
@@ -167,7 +180,7 @@ const ProspectList: React.FC = () => {
                               size="sm"
                               onClick={() => handleConvertToCandidate(prospect.id)}
                               disabled={isConverting(prospect.id)}
-                              className="bg-[#F59E0B] hover:bg-[#D97706] text-white font-medium"
+                              className="bg-ff-accent hover:bg-ff-secondary text-white font-medium"
                             >
                               {isConverting(prospect.id) ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

@@ -19,10 +19,11 @@ export default {
 		},
 		extend: {
 			colors: {
-				// Fail Fast Brand Colors
-				'ff-primary': '#1E3A8A',
-				'ff-accent': '#F59E0B',
-				'ff-neutral': '#F3F4F6',
+				// Fail Fast Brand Colors - Based on Logo
+				'ff-primary': '#4F46E5', // Blue from logo
+				'ff-secondary': '#3B82F6', // Lighter blue
+				'ff-accent': '#6366F1', // Purple-blue accent
+				'ff-neutral': '#F8FAFC',
 				'ff-success': '#10B981',
 				'ff-error': '#EF4444',
 				// Original colors

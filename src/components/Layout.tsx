@@ -29,7 +29,14 @@ export default function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">HR System</h1>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/f8ecd123-b0df-4541-aea0-a92ff0ade3b9.png" 
+              alt="Fail Fast Logo" 
+              className="h-8 w-8"
+            />
+            <h1 className="text-xl font-bold text-ff-primary">Fail Fast</h1>
+          </div>
         </div>
         <nav className="mt-6">
           {navigation.map((item) => {
@@ -41,7 +48,7 @@ export default function Layout({ children }: LayoutProps) {
                 className={cn(
                   "flex items-center px-6 py-3 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                    ? "bg-ff-neutral text-ff-primary border-r-2 border-ff-primary"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
