@@ -59,6 +59,33 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (PostgreSQL database and backend)
+
+## Intelligent Agents
+
+This project includes AI-powered agents in the `agents/` directory:
+
+### ProspectMatcher Agent
+
+An intelligent recruitment agent that performs semantic analysis to match job candidates with positions.
+
+**Location**: `agents/prospect-matcher/`
+
+**Features**:
+- Semantic matching using GPT-4
+- Automated prospect evaluation
+- REST API for integration
+- Match scoring (0-100 scale)
+- Detailed insights with strengths and gaps
+
+**Quick Start**:
+```bash
+cd agents/prospect-matcher
+./setup.sh
+npm run dev
+```
+
+See [agents/prospect-matcher/README.md](agents/prospect-matcher/README.md) for full documentation.
 
 ## How can I deploy this project?
 

@@ -1,0 +1,177 @@
+### ProspectMatcher API Examples
+### Use with REST Client extension in VS Code or any HTTP client
+
+@baseUrl = http://localhost:3001
+@agentId = YOUR-AGENT-ID-HERE
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Get API Info
+GET {{baseUrl}}/
+
+### Get All Open Positions
+GET {{baseUrl}}/agents/prospect-matcher/positions
+
+### Get All Prospects
+GET {{baseUrl}}/agents/prospect-matcher/prospects
+
+### Create New Prospect (without auto-match)
+POST {{baseUrl}}/agents/prospect-matcher/create
+Content-Type: application/json
+
+{
+  "agent_id": "{{agentId}}",
+  "name": "Alex Johnson",
+  "email": "alex@example.com",
+  "phone": "+1-555-0123",
+  "linkedin_url": "https://linkedin.com/in/alexjohnson",
+  "profile_text": "Senior Software Engineer with 8+ years of experience in full-stack development. Expertise in Python, JavaScript/TypeScript, React, Node.js, and PostgreSQL. Strong background in cloud technologies (AWS, GCP) and microservices architecture. Led development teams and mentored junior developers. Passionate about clean code and scalable systems."
+}
+
+### Create New Prospect (with auto-match)
+POST {{baseUrl}}/agents/prospect-matcher/create?auto_match=true
+Content-Type: application/json
+
+{
+  "agent_id": "{{agentId}}",
+  "name": "Sarah Chen",
+  "email": "sarah.chen@example.com",
+  "linkedin_url": "https://linkedin.com/in/sarahchen",
+  "profile_text": "Full-Stack Developer specializing in modern web technologies. 5 years of professional experience building responsive web applications using React, Next.js, and Node.js. Strong understanding of RESTful APIs, GraphQL, and database design. Experience with Agile methodologies and CI/CD pipelines.",
+  "profile_json": {
+    "skills": ["React", "Node.js", "TypeScript", "PostgreSQL", "AWS"],
+    "years_experience": 5,
+    "education": "BS Computer Science",
+    "certifications": ["AWS Certified Developer"]
+  }
+}
+
+### Match Specific Prospect to Specific Position
+POST {{baseUrl}}/agents/prospect-matcher/match
+Content-Type: application/json
+
+{
+  "prospect_id": "abc-123-prospect-id",
+  "position_id": "xyz-456-position-id",
+  "auto_save": true
+}
+
+### Match Prospect to All Open Positions
+POST {{baseUrl}}/agents/prospect-matcher/match
+Content-Type: application/json
+
+{
+  "prospect_id": "abc-123-prospect-id",
+  "auto_save": true
+}
+
+### Match All Prospects to a Position
+POST {{baseUrl}}/agents/prospect-matcher/match
+Content-Type: application/json
+
+{
+  "position_id": "xyz-456-position-id",
+  "auto_save": true
+}
+
+### Match Without Saving (Preview Mode)
+POST {{baseUrl}}/agents/prospect-matcher/match
+Content-Type: application/json
+
+{
+  "prospect_id": "abc-123-prospect-id",
+  "position_id": "xyz-456-position-id",
+  "auto_save": false
+}
+
+### Search Prospects
+GET {{baseUrl}}/agents/prospect-matcher/search?query=python+developer&type=prospects&limit=10
+
+### Search Prospects - Senior Engineers
+GET {{baseUrl}}/agents/prospect-matcher/search?query=senior+engineer&type=prospects&limit=5
+
+### Search Positions
+GET {{baseUrl}}/agents/prospect-matcher/search?query=full+stack&type=positions&limit=10
+
+### Get Evaluations for Prospect
+GET {{baseUrl}}/agents/prospect-matcher/evaluations?prospect_id=abc-123-prospect-id
+
+### Get Evaluations for Position
+GET {{baseUrl}}/agents/prospect-matcher/evaluations?position_id=xyz-456-position-id
+
+### Delete Prospect
+DELETE {{baseUrl}}/agents/prospect-matcher/delete?type=prospect&id=abc-123-prospect-id
+
+### Delete Position
+DELETE {{baseUrl}}/agents/prospect-matcher/delete?type=position&id=xyz-456-position-id
+
+###
+### Example Responses
+###
+
+### Expected Response from Create (with auto_match=true):
+# {
+#   "prospect": {
+#     "id": "550e8400-e29b-41d4-a716-446655440000",
+#     "agent_id": "660e8400-e29b-41d4-a716-446655440001",
+#     "name": "Sarah Chen",
+#     "email": "sarah.chen@example.com",
+#     "phone": null,
+#     "linkedin_url": "https://linkedin.com/in/sarahchen",
+#     "profile_text": "Full-Stack Developer...",
+#     "profile_json": { ... },
+#     "created_at": "2025-10-28T12:00:00Z"
+#   },
+#   "evaluations": [
+#     {
+#       "prospect_id": "550e8400-e29b-41d4-a716-446655440000",
+#       "position_id": "770e8400-e29b-41d4-a716-446655440002",
+#       "match_score": 85,
+#       "strengths": [
+#         "5 years of experience with React and Node.js aligns perfectly with stack requirements",
+#         "Strong TypeScript skills match technical requirements",
+#         "AWS certification demonstrates cloud competency"
+#       ],
+#       "gaps": [
+#         "No specific mention of GraphQL experience though listed in requirements",
+#         "Limited leadership experience for senior role expectations"
+#       ],
+#       "recommendation": "Highly Recommended - Strong technical fit with minor experience gaps",
+#       "detailed_analysis": "Sarah demonstrates excellent technical capabilities..."
+#     }
+#   ]
+# }
+
+### Expected Response from Match (single):
+# {
+#   "prospect_id": "550e8400-e29b-41d4-a716-446655440000",
+#   "position_id": "770e8400-e29b-41d4-a716-446655440002",
+#   "match_score": 78,
+#   "strengths": [
+#     "8+ years of Python development exceeds the 5+ years requirement",
+#     "Leadership experience matches requirement for team lead role",
+#     "AWS and cloud architecture experience directly relevant"
+#   ],
+#   "gaps": [
+#     "No specific Machine Learning experience mentioned in profile",
+#     "Kubernetes experience not clearly stated"
+#   ],
+#   "recommendation": "Recommended - Strong candidate with some skill development opportunities",
+#   "detailed_analysis": "The candidate presents a strong profile for this position..."
+# }
+
+### Expected Response from Search:
+# [
+#   {
+#     "id": "550e8400-e29b-41d4-a716-446655440000",
+#     "agent_id": "660e8400-e29b-41d4-a716-446655440001",
+#     "name": "Alex Johnson",
+#     "email": "alex@example.com",
+#     "phone": "+1-555-0123",
+#     "linkedin_url": "https://linkedin.com/in/alexjohnson",
+#     "profile_text": "Senior Software Engineer...",
+#     "profile_json": null,
+#     "created_at": "2025-10-28T10:30:00Z"
+#   }
+# ]
