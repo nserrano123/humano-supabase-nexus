@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, UserPlus, Users } from "lucide-react";
+import { ExternalLink, UserPlus, Users, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import ConvertProspectModal from "./ConvertProspectModal";
+import ProspectFormModal from "./ProspectFormModal";
 
 interface Prospect {
   id: string;
@@ -16,13 +19,16 @@ interface Prospect {
   profile_text: string;
   profile_json: any;
   created_at: string;
+  status: string;
 }
 
 const ProspectList: React.FC = () => {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [loading, setLoading] = useState(true);
-  const [convertingIds, setConvertingIds] = useState<Set<string>>(new Set());
-  const [convertedIds, setConvertedIds] = useState<Set<string>>(new Set());
+  const [convertModalOpen, setConvertModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
+  const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
 
   useEffect(() => {
     fetchProspects();
@@ -32,7 +38,7 @@ const ProspectList: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('prospect')
-        .select('id, name, email, phone, linkedin_url, profile_text, profile_json, created_at')
+        .select('id, name, email, phone, linkedin_url, profile_text, profile_json, created_at, status')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -45,32 +51,51 @@ const ProspectList: React.FC = () => {
     }
   };
 
-  const handleConvertToCandidate = async (prospectId: string) => {
-    setConvertingIds(prev => new Set(prev).add(prospectId));
+  const handleOpenConvertModal = (prospect: Prospect) => {
+    setSelectedProspect(prospect);
+    setConvertModalOpen(true);
+  };
+
+  const handleOpenEditModal = (prospect: Prospect) => {
+    setEditingProspect(prospect);
+    setFormModalOpen(true);
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingProspect(null);
+    setFormModalOpen(true);
+  };
+
+  const handleDeleteProspect = async (prospectId: string) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este prospecto?')) return;
 
     try {
-      const { error } = await supabase.rpc('insert_candidate_from_prospect_fn', {
-        p_prospect_id: prospectId
-      });
+      const { error } = await supabase
+        .from('prospect')
+        .delete()
+        .eq('id', prospectId);
 
       if (error) throw error;
 
-      setConvertedIds(prev => new Set(prev).add(prospectId));
-      toast.success('Prospecto convertido a candidato exitosamente');
+      toast.success('Prospecto eliminado correctamente');
+      fetchProspects();
     } catch (error: any) {
-      console.error('Error converting prospect:', error);
-      toast.error(`Error al convertir prospecto: ${error.message || 'Error desconocido'}`);
-    } finally {
-      setConvertingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(prospectId);
-        return newSet;
-      });
+      console.error('Error deleting prospect:', error);
+      toast.error(`Error al eliminar prospecto: ${error.message || 'Error desconocido'}`);
     }
   };
 
-  const isConverting = (id: string) => convertingIds.has(id);
-  const isConverted = (id: string) => convertedIds.has(id);
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
+      'new': { variant: 'default', label: 'Nuevo' },
+      'contacted': { variant: 'secondary', label: 'Contactado' },
+      'qualified': { variant: 'outline', label: 'Calificado' },
+      'converted': { variant: 'outline', label: 'Convertido' },
+      'archived': { variant: 'destructive', label: 'Archivado' }
+    };
+    const config = variants[status] || variants['new'];
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
 
   if (loading) {
     return (
@@ -85,14 +110,20 @@ const ProspectList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-8 w-8 text-ff-primary" />
-        <div>
-          <h1 className="text-3xl font-bold text-ff-primary">Lista de Prospectos</h1>
-          <p className="text-muted-foreground">
-            Gestiona y convierte prospectos en candidatos
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Users className="h-8 w-8 text-ff-primary" />
+          <div>
+            <h1 className="text-3xl font-bold text-ff-primary">Lista de Prospectos</h1>
+            <p className="text-muted-foreground">
+              Gestiona y convierte prospectos en candidatos
+            </p>
+          </div>
         </div>
+        <Button onClick={handleOpenCreateModal} className="bg-ff-primary hover:bg-ff-secondary">
+          <Plus className="h-4 w-4 mr-2" />
+          Crear Prospecto
+        </Button>
       </div>
 
       <Card>
@@ -121,8 +152,7 @@ const ProspectList: React.FC = () => {
                     <TableHead className="text-white font-semibold">Email</TableHead>
                     <TableHead className="text-white font-semibold">Teléfono</TableHead>
                     <TableHead className="text-white font-semibold">LinkedIn</TableHead>
-                    <TableHead className="text-white font-semibold">Título</TableHead>
-                    <TableHead className="text-white font-semibold">Ubicación</TableHead>
+                    <TableHead className="text-white font-semibold">Estado</TableHead>
                     <TableHead className="text-white font-semibold">Fecha</TableHead>
                     <TableHead className="text-white font-semibold text-center">Acciones</TableHead>
                   </TableRow>
@@ -157,35 +187,44 @@ const ProspectList: React.FC = () => {
                           <span className="text-muted-foreground">Sin LinkedIn</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {prospect.profile_json?.title || 'Sin título'}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {prospect.profile_json?.location || 'Sin ubicación'}
+                      <TableCell>
+                        {getStatusBadge(prospect.status || 'new')}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(prospect.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center">
-                          {isConverted(prospect.id) ? (
+                      <TableCell>
+                        <div className="flex justify-center gap-2">
+                          {prospect.status === 'converted' ? (
                             <Badge className="bg-ff-success text-white">
+                              <Eye className="h-3 w-3 mr-1" />
                               Convertido
                             </Badge>
                           ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => handleConvertToCandidate(prospect.id)}
-                              disabled={isConverting(prospect.id)}
-                              className="bg-ff-accent hover:bg-ff-secondary text-white font-medium"
-                            >
-                              {isConverting(prospect.id) ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              ) : (
-                                <UserPlus className="h-4 w-4 mr-2" />
-                              )}
-                              {isConverting(prospect.id) ? 'Convirtiendo...' : 'Convertir a Candidato'}
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenEditModal(prospect)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleOpenConvertModal(prospect)}
+                                className="bg-ff-accent hover:bg-ff-secondary text-white"
+                              >
+                                <UserPlus className="h-3 w-3 mr-1" />
+                                Convertir
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteProspect(prospect.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </TableCell>
@@ -197,6 +236,22 @@ const ProspectList: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {selectedProspect && (
+        <ConvertProspectModal
+          open={convertModalOpen}
+          onOpenChange={setConvertModalOpen}
+          prospect={selectedProspect}
+          onSuccess={fetchProspects}
+        />
+      )}
+
+      <ProspectFormModal
+        open={formModalOpen}
+        onOpenChange={setFormModalOpen}
+        prospect={editingProspect}
+        onSuccess={fetchProspects}
+      />
     </div>
   );
 };

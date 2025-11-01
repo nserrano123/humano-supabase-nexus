@@ -7,13 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Search, ExternalLink, Trash2, Eye } from "lucide-react";
+import { Search, ExternalLink, Trash2, Eye, Plus, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import CandidateFormModal from "@/components/CandidateFormModal";
 
 export default function Candidates() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editingCandidate, setEditingCandidate] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: candidates, isLoading } = useQuery({
@@ -91,9 +94,13 @@ export default function Candidates() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Candidates</h1>
-          <p className="text-gray-600">Manage your candidate database</p>
+          <h1 className="text-3xl font-bold text-ff-primary">Candidates</h1>
+          <p className="text-muted-foreground">Manage your candidate database</p>
         </div>
+        <Button onClick={() => { setEditingCandidate(null); setFormModalOpen(true); }} className="bg-ff-primary hover:bg-ff-secondary">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Candidate
+        </Button>
       </div>
 
       <Card>
@@ -191,6 +198,13 @@ export default function Candidates() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setEditingCandidate(candidate); setFormModalOpen(true); }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         {candidate.linkedin_url && (
                           <Button
                             variant="outline"
@@ -209,6 +223,13 @@ export default function Candidates() {
           </Table>
         </CardContent>
       </Card>
+
+      <CandidateFormModal
+        open={formModalOpen}
+        onOpenChange={setFormModalOpen}
+        candidate={editingCandidate}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["candidates"] })}
+      />
     </div>
   );
 }

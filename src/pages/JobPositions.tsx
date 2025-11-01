@@ -9,10 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { Search, Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import JobPositionFormModal from "@/components/JobPositionFormModal";
 
 export default function JobPositions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [editingPosition, setEditingPosition] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: jobPositions, isLoading } = useQuery({
@@ -99,10 +102,10 @@ export default function JobPositions() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Job Positions</h1>
-          <p className="text-gray-600">Manage your job openings</p>
+          <h1 className="text-3xl font-bold text-ff-primary">Job Positions</h1>
+          <p className="text-muted-foreground">Manage your job openings</p>
         </div>
-        <Button>
+        <Button onClick={() => { setEditingPosition(null); setFormModalOpen(true); }} className="bg-ff-primary hover:bg-ff-secondary">
           <Plus className="h-4 w-4 mr-2" />
           Add Position
         </Button>
@@ -189,7 +192,11 @@ export default function JobPositions() {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => { setEditingPosition(job); setFormModalOpen(true); }}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -200,6 +207,13 @@ export default function JobPositions() {
           </Table>
         </CardContent>
       </Card>
+
+      <JobPositionFormModal
+        open={formModalOpen}
+        onOpenChange={setFormModalOpen}
+        jobPosition={editingPosition}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["job-positions"] })}
+      />
     </div>
   );
 }
