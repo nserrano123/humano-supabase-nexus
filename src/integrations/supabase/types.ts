@@ -7,15 +7,50 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       agent: {
         Row: {
           created_at: string
           description: string | null
           github_url: string | null
           id: string
-          life_period: unknown | null
+          life_period: unknown
           name: string
         }
         Insert: {
@@ -23,7 +58,7 @@ export type Database = {
           description?: string | null
           github_url?: string | null
           id?: string
-          life_period?: unknown | null
+          life_period?: unknown
           name: string
         }
         Update: {
@@ -31,7 +66,7 @@ export type Database = {
           description?: string | null
           github_url?: string | null
           id?: string
-          life_period?: unknown | null
+          life_period?: unknown
           name?: string
         }
         Relationships: []
@@ -53,7 +88,9 @@ export type Database = {
           metadata: Json | null
           name: string
           phone: string | null
+          prospect_id: string | null
           rol: string | null
+          status: string | null
           summary: string | null
           transfer_head_quarters: boolean | null
           work_mode: string | null
@@ -74,7 +111,9 @@ export type Database = {
           metadata?: Json | null
           name: string
           phone?: string | null
+          prospect_id?: string | null
           rol?: string | null
+          status?: string | null
           summary?: string | null
           transfer_head_quarters?: boolean | null
           work_mode?: string | null
@@ -95,7 +134,9 @@ export type Database = {
           metadata?: Json | null
           name?: string
           phone?: string | null
+          prospect_id?: string | null
           rol?: string | null
+          status?: string | null
           summary?: string | null
           transfer_head_quarters?: boolean | null
           work_mode?: string | null
@@ -106,6 +147,13 @@ export type Database = {
             columns: ["document_type"]
             isOneToOne: false
             referencedRelation: "document_type"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect"
             referencedColumns: ["id"]
           },
           {
@@ -198,6 +246,51 @@ export type Database = {
           },
         ]
       }
+      candidate_job_applications: {
+        Row: {
+          candidate_id: string
+          created_at: string | null
+          id: string
+          job_position_id: string
+          notes: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string | null
+          id?: string
+          job_position_id: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string | null
+          id?: string
+          job_position_id?: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_job_applications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidate"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_job_applications_job_position_id_fkey"
+            columns: ["job_position_id"]
+            isOneToOne: false
+            referencedRelation: "job_position"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_language: {
         Row: {
           candidate_id: string
@@ -283,7 +376,7 @@ export type Database = {
             foreignKeyName: "fk_evaluation"
             columns: ["evaluation_id"]
             isOneToOne: false
-            referencedRelation: "evaluation"
+            referencedRelation: "process"
             referencedColumns: ["id"]
           },
           {
@@ -408,45 +501,6 @@ export type Database = {
           name?: string
         }
         Relationships: []
-      }
-      evaluation: {
-        Row: {
-          candidate_process_id: string
-          comments: string | null
-          evaluation_type_id: string
-          id: string
-          score: number | null
-        }
-        Insert: {
-          candidate_process_id: string
-          comments?: string | null
-          evaluation_type_id: string
-          id?: string
-          score?: number | null
-        }
-        Update: {
-          candidate_process_id?: string
-          comments?: string | null
-          evaluation_type_id?: string
-          id?: string
-          score?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_candidate_process"
-            columns: ["candidate_process_id"]
-            isOneToOne: false
-            referencedRelation: "candidate_process"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_evaluation_type"
-            columns: ["evaluation_type_id"]
-            isOneToOne: false
-            referencedRelation: "evaluation_type"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       evaluation_type: {
         Row: {
@@ -797,6 +851,57 @@ export type Database = {
         }
         Relationships: []
       }
+      process: {
+        Row: {
+          candidate_process_id: string
+          comments: string | null
+          end: string | null
+          evaluation_type_id: string
+          id: string
+          quantity: number | null
+          score: number | null
+          start: string | null
+          state: boolean | null
+        }
+        Insert: {
+          candidate_process_id: string
+          comments?: string | null
+          end?: string | null
+          evaluation_type_id: string
+          id?: string
+          quantity?: number | null
+          score?: number | null
+          start?: string | null
+          state?: boolean | null
+        }
+        Update: {
+          candidate_process_id?: string
+          comments?: string | null
+          end?: string | null
+          evaluation_type_id?: string
+          id?: string
+          quantity?: number | null
+          score?: number | null
+          start?: string | null
+          state?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_candidate_process"
+            columns: ["candidate_process_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_process"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_evaluation_type"
+            columns: ["evaluation_type_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       program: {
         Row: {
           company_id: string | null
@@ -843,6 +948,7 @@ export type Database = {
           phone: string | null
           profile_json: Json | null
           profile_text: string | null
+          status: string | null
         }
         Insert: {
           agent_id: string
@@ -854,6 +960,7 @@ export type Database = {
           phone?: string | null
           profile_json?: Json | null
           profile_text?: string | null
+          status?: string | null
         }
         Update: {
           agent_id?: string
@@ -865,6 +972,7 @@ export type Database = {
           phone?: string | null
           profile_json?: Json | null
           profile_text?: string | null
+          status?: string | null
         }
         Relationships: [
           {
@@ -1115,10 +1223,6 @@ export type Database = {
         Args: { p_candidate_id: string; p_job_position_id: string }
         Returns: undefined
       }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
-      }
       candidate_vs_job_position_similarities: {
         Args: {
           inputs: Database["public"]["CompositeTypes"]["candidate_job_position"][]
@@ -1132,32 +1236,40 @@ export type Database = {
         Args: { p_linkedin_url: string }
         Returns: boolean
       }
-      create_candidate: {
-        Args:
-          | {
-              p_name: string
-              p_linkedin_url: string
-              p_city_id: string
-              p_phone: string
-              p_email: string
-              p_metadata: Json
-            }
-          | {
-              p_name: string
-              p_linkedin_url: string
-              p_phone: string
-              p_email: string
-            }
-        Returns: string
+      convert_prospect_to_candidate: {
+        Args: {
+          p_job_position_id?: string
+          p_override_duplicate?: boolean
+          p_prospect_id: string
+        }
+        Returns: Json
       }
+      create_candidate:
+        | {
+            Args: {
+              p_email: string
+              p_linkedin_url: string
+              p_name: string
+              p_phone: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_city_id: string
+              p_email: string
+              p_linkedin_url: string
+              p_metadata: Json
+              p_name: string
+              p_phone: string
+            }
+            Returns: string
+          }
       extract_prospect_data: {
         Args: { p_prospect_id: string }
         Returns: Record<string, unknown>
       }
-      find_or_create_city: {
-        Args: { p_city_name: string }
-        Returns: string
-      }
+      find_or_create_city: { Args: { p_city_name: string }; Returns: string }
       find_or_create_company: {
         Args: { p_company_name: string }
         Returns: string
@@ -1170,77 +1282,22 @@ export type Database = {
         Args: { p_program_name: string; p_school: string }
         Returns: string
       }
-      get_candidate_id: {
-        Args: { p_linkedin_url: string }
-        Returns: string
-      }
+      get_candidate_id: { Args: { p_linkedin_url: string }; Returns: string }
       get_job_evaluation_data: {
         Args: { prospect_evaluation_id: string }
         Returns: {
           evaluation_criteria: string
-          profile_text: string
           llm_score_threshold: number
+          profile_text: string
         }[]
       }
       get_other_job_positions_for_prospect: {
         Args: { p_prospect_id: string }
         Returns: {
+          description: string
           id: string
           name: string
-          description: string
         }[]
-      }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
       }
       insert_candidate_from_prospect_fn: {
         Args: { p_prospect_id: string }
@@ -1249,49 +1306,29 @@ export type Database = {
       insert_prospect_with_agent_and_job_position: {
         Args: {
           agent_id: string
+          email: string
+          job_position_id: string
           linkedin_url: string
           name: string
           phone: string
-          email: string
-          job_position_id: string
         }
         Returns: Json
       }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
-      }
       manage_candidate: {
         Args: {
-          p_name: string
-          p_linkedin_url: string
-          p_phone: string
           p_email: string
           p_job_position_id: string
+          p_linkedin_url: string
+          p_name: string
+          p_phone: string
         }
         Returns: Json
       }
       match_documents: {
-        Args: { match_count: number; query_embedding: string; filter?: Json }
+        Args: { filter?: Json; match_count: number; query_embedding: string }
         Returns: {
-          id: string
           content: string
+          id: string
           similarity: number
         }[]
       }
@@ -1309,9 +1346,9 @@ export type Database = {
       }
       search_city_by_embedding: {
         Args: {
-          query_embedding: string
-          match_threshold?: number
           match_count?: number
+          match_threshold?: number
+          query_embedding: string
         }
         Returns: {
           id: string
@@ -1319,54 +1356,8 @@ export type Database = {
           similarity: number
         }[]
       }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
@@ -1380,21 +1371,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1412,14 +1407,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1435,14 +1432,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1458,14 +1457,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1473,14 +1474,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
