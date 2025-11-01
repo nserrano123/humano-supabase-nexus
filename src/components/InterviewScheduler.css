@@ -1,0 +1,185 @@
+.interview-scheduler {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.scheduler-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.scheduler-header h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.scheduler-header p {
+  color: #666;
+  font-size: 16px;
+}
+
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.sign-in-button,
+.find-slots-button {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sign-in-button:hover,
+.find-slots-button:hover {
+  background-color: #3367d6;
+}
+
+.sign-in-button:disabled,
+.find-slots-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.scheduler-actions {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.interview-options {
+  margin-top: 30px;
+}
+
+.interview-options h3 {
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.day-option {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fafafa;
+}
+
+.day-option h4 {
+  color: #333;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.time-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.time-slot {
+  background-color: white;
+  border: 2px solid #e0e0e0;
+  padding: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  text-align: center;
+}
+
+.time-slot:hover {
+  border-color: #4285f4;
+  background-color: #f8f9ff;
+}
+
+.time-slot.selected {
+  border-color: #4285f4;
+  background-color: #4285f4;
+  color: white;
+}
+
+.confirmation-panel {
+  background-color: #f0f8ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.confirmation-panel h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.confirmation-panel p {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirm-button {
+  background-color: #34a853;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.confirm-button:hover {
+  background-color: #2d8f47;
+}
+
+.cancel-button {
+  background-color: #ea4335;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #d33b2c;
+}
+
+@media (max-width: 768px) {
+  .interview-scheduler {
+    padding: 15px;
+  }
+  
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .confirmation-actions {
+    flex-direction: column;
+  }
+}
