@@ -9,12 +9,26 @@ class GoogleCalendarService {
   // Initialize Google API
   async initializeGapi() {
     return new Promise((resolve, reject) => {
+      // Check stored credentials first, then environment variables
+      const apiKey = localStorage.getItem('google_api_key') || process.env.REACT_APP_GOOGLE_API_KEY;
+      const clientId = localStorage.getItem('google_client_id') || process.env.REACT_APP_GOOGLE_CLIENT_ID;
+      
+      if (!apiKey || apiKey === 'your_google_api_key_here') {
+        reject(new Error('Google API Key not configured. Please configure in Settings.'));
+        return;
+      }
+      
+      if (!clientId || clientId === 'your_google_client_id_here') {
+        reject(new Error('Google Client ID not configured. Please configure in Settings.'));
+        return;
+      }
+
       if (window.gapi) {
         window.gapi.load('client:auth2', async () => {
           try {
             await window.gapi.client.init({
-              apiKey: process.env.REACT_APP_GOOGLE_API_KEY,
-              clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+              apiKey: apiKey,
+              clientId: clientId,
               discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
               scope: 'https://www.googleapis.com/auth/calendar.readonly'
             });
@@ -23,11 +37,11 @@ class GoogleCalendarService {
             this.isSignedIn = this.gapi.auth2.getAuthInstance().isSignedIn.get();
             resolve();
           } catch (error) {
-            reject(error);
+            reject(new Error(`Google API initialization failed: ${error.message}`));
           }
         });
       } else {
-        reject(new Error('Google API not loaded'));
+        reject(new Error('Google API script not loaded. Please check your internet connection.'));
       }
     });
   }

@@ -3,6 +3,8 @@ import googleCalendarService from '../services/googleCalendar';
 import './InterviewScheduler.css';
 
 const InterviewScheduler = () => {
+  console.log('InterviewScheduler component rendering');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [interviewOptions, setInterviewOptions] = useState([]);
@@ -17,8 +19,9 @@ const InterviewScheduler = () => {
     try {
       await googleCalendarService.initializeGapi();
       setIsSignedIn(googleCalendarService.isSignedIn);
+      setError(null);
     } catch (error) {
-      setError('Failed to initialize Google Calendar. Please check your API configuration.');
+      setError(error.message);
       console.error('Calendar initialization error:', error);
     }
   };
@@ -79,25 +82,30 @@ const InterviewScheduler = () => {
 
   if (!isSignedIn) {
     return (
-      <div className="interview-scheduler">
-        <div className="scheduler-header">
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', background: 'white', borderRadius: '8px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
           <h2>Interview Scheduler</h2>
           <p>Connect to Google Calendar to find available interview slots</p>
         </div>
         
         {error && (
-          <div className="error-message">
+          <div style={{ backgroundColor: '#fee', border: '1px solid #fcc', color: '#c33', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>
             {error}
+            {error.includes('not configured') && (
+              <p>Please go to Settings to configure your Google Calendar API credentials.</p>
+            )}
           </div>
         )}
         
-        <button 
-          onClick={handleSignIn}
-          disabled={isLoading}
-          className="sign-in-button"
-        >
-          {isLoading ? 'Connecting...' : 'Connect Google Calendar'}
-        </button>
+        {!error && (
+          <button 
+            onClick={handleSignIn}
+            disabled={isLoading}
+            style={{ backgroundColor: '#4285f4', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '6px', fontSize: '16px', cursor: 'pointer' }}
+          >
+            {isLoading ? 'Connecting...' : 'Connect Google Calendar'}
+          </button>
+        )}
       </div>
     );
   }
