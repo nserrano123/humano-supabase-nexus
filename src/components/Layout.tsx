@@ -5,7 +5,8 @@ import {
   LayoutDashboard, 
   Users, 
   Briefcase, 
-  ClipboardList 
+  ClipboardList,
+  CreditCard
 } from "lucide-react";
 
 interface LayoutProps {
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Recruitment", href: "/recruitment", icon: ClipboardList },
   { name: "Prospects", href: "/prospects", icon: Users },
   { name: "Agents", href: "/agents", icon: Users },
+  { name: "Checkout", href: "/checkout", icon: CreditCard },
 ];
 
 export default function Layout({ children }: LayoutProps) {

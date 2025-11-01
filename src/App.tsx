@@ -11,6 +11,8 @@ import Recruitment from "./pages/Recruitment";
 import RecruitmentDetails from "./pages/RecruitmentDetails";
 import Agents from "./pages/Agents";
 import Prospects from "./pages/Prospects";
+import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 
@@ -58,6 +60,12 @@ const App = () => (
               <Prospects />
             </Layout>
           } />
+          <Route path="/checkout" element={
+            <Layout>
+              <Checkout />
+            </Layout>
+          } />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/recruitment-details/:jobPositionId" element={
             <Layout>
               <RecruitmentDetails />
